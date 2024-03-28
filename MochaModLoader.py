@@ -1,19 +1,38 @@
 # MochaMod Loader 
 # This application is meant to help install mod folders to the users existing mod folder in their Minecraft directory (assuming they didnt move the folder from default location)
 
-import os
+import os # fucking OS import
 import shutil
-import tkinter as tk
+import tkinter as tk # cause fuck python cmd's this makes gui's
+# GUI libraries
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import scrolledtext
+# 
 import getpass
+import platform # OS detection library :D
+import webbrowser
+
+# MochaMod Loader Version number global variable
+SOFTWARE_VERSION = "1.4"
 
 def replace_mod_folder():
     source_folder = filedialog.askdirectory(title="Select Your Mod Folder")
     username = getpass.getuser()
-    target_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
-    
+
+    # This checks for all systems that i have added, since not everyone uses windows we wanted to accept all operating systems because someone is going to bitch about it one day
+    # might as well make it happen now am i
+
+    if platform.system() == "Windows":
+        target_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
+    elif platform.system() == "Darwin":  # macOS
+        target_folder = f"/Users/{username}/Library/Application Support/minecraft/mods"
+    elif platform.system() == "Linux":
+        target_folder = f"/home/{username}/.minecraft/mods"
+    else:
+        messagebox.showerror("Unsupported OS", "This operating system is not supported.")
+        return
+
     # Display a warning message
     confirmed = messagebox.askokcancel("MochaMod Loader Warning!", "Once you agree this cannot be undone! Please verify!")
     
@@ -52,20 +71,44 @@ def replace_mod_folder():
 
 def open_mod_folder():
     username = getpass.getuser()
-    mod_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
+
+    if platform.system() == "Windows":
+        mod_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
+    elif platform.system() == "Darwin":  # macOS
+        mod_folder = f"/Users/{username}/Library/Application Support/minecraft/mods"
+    elif platform.system() == "Linux":
+        mod_folder = f"/home/{username}/.minecraft/mods"
+    else:
+        messagebox.showerror("Unsupported OS", "This operating system is not supported.")
+        return
+
     os.startfile(mod_folder)
-    
+
 def refresh_contents_list():
     username = getpass.getuser()
-    mod_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
-    update_contents_list(mod_folder)    
+
+    if platform.system() == "Windows":
+        mod_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
+    elif platform.system() == "Darwin":  # macOS
+        mod_folder = f"/Users/{username}/Library/Application Support/minecraft/mods"
+    elif platform.system() == "Linux":
+        mod_folder = f"/home/{username}/.minecraft/mods"
+    else:
+        messagebox.showerror("Unsupported OS", "This operating system is not supported.")
+        return
+
+    update_contents_list(mod_folder)
 
 def show_about():
-    messagebox.showinfo("About", "MochaMod Loader\n\nVersion 1.4\n\nCreated by Xanadu Systems (ShiroNet)")
+    messagebox.showinfo("About", f"MochaMod Loader\n\nVersion {SOFTWARE_VERSION}\n\nCreated by Xanadu Systems (ShiroNet)")
 
 def show_usage():
     messagebox.showinfo("How to Use", "To use the software, follow these steps:\n\n1. Click the 'Replace Mod Folder' button to select your mod folder.\n2. Click the 'Open Mod Folder' button to open the current mod folder.\n3. Click the refresh button to verify that your mod folder has changed\n Enjoy using MochaMod Loader!")
 
+def open_github():
+    website_url = "https://github.com/Shiro-Net"
+    webbrowser.open(website_url)
+    
 def show_log_notes():
     try:
         # Open the .txt file containing the log notes
@@ -91,6 +134,7 @@ def show_log_notes():
 
     except FileNotFoundError:
         messagebox.showerror("Error", "Log notes file not found.")
+        #If those happens im not sure what the fuck happened to that log_notes ¯\_(ツ)_/¯ that shit gone for real, you can probably download it from the repo or some shit.
 
 # Update the list that contains the mods
 def update_contents_list(folder):
@@ -102,6 +146,19 @@ def update_contents_list(folder):
 root = tk.Tk()
 root.title("MochaMod Loader")
 root.resizable(False, False)  # Prevent resizing
+    
+# Function to determine OS color
+def get_os_color():
+    system = platform.system()
+    if system == "Windows":
+        return "blue"
+    elif system == "Darwin":  # macOS
+        return "red"
+    elif system == "Linux":
+        return "orange"
+    else:
+        return "black"  # Default color    
+    
 
 # Create a menu strip
 menu_strip = tk.Menu(root)
@@ -113,6 +170,7 @@ help_menu.add_command(label="About", command=show_about)
 help_menu.add_command(label="How to Use the Software", command=show_usage)
 menu_strip.add_cascade(label="Help", menu=help_menu)
 menu_strip.add_cascade(label="ShrioNet's Log Notes", command=show_log_notes)
+menu_strip.add_cascade(label="ShiroNet's Github", command=open_github)
 
 # Create a marquee label
 marquee_text = "Please select the correct folder that contain your mods before uploading!                                        "  # Extra spaces added
@@ -141,7 +199,7 @@ open_button = tk.Button(root, text="Open Mod Folder", command=open_mod_folder)
 open_button.pack(pady=5)
 
 # Create a label to display the current mod folder
-username = getpass.getuser()
+username = getpass.getuser() # sick username bro
 mod_folder_path = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
 current_mod_folder_label = tk.Label(root, text=f"Current Mod Folder: {mod_folder_path}")
 current_mod_folder_label.pack(pady=5)
@@ -154,6 +212,10 @@ mod_folder_path_label.pack(pady=2)
 refresh_button = tk.Button(root, text="Refresh Mod List", command=refresh_contents_list)
 refresh_button.pack(pady=2)
 
+# Label for the list
+list_label = tk.Label(root, text="Current Directory", font=("Arial", 8, "bold"))
+list_label.pack(side=tk.TOP, anchor='w')  # Positioned below the creator label, aligned to the left'
+
 # Create a listbox to display the contents of the mod folder
 contents_list = tk.Listbox(root)
 contents_list.pack(pady=5, expand=True, fill=tk.BOTH)
@@ -161,9 +223,21 @@ contents_list.pack(pady=5, expand=True, fill=tk.BOTH)
 # Populate the listbox with the contents of the mod folder
 update_contents_list(mod_folder_path)
 
-# Create a label for the application creator
-creator_label = tk.Label(root, text="Application created by Xanadu Systems (ShiroNet)")
-creator_label.pack(pady=5)
+# Detected operating system label
+os_system_label = tk.Label(root, text=platform.system(), font=("Arial", 10, "bold"), fg=get_os_color())
+os_system_label.pack(pady=3, side=tk.RIGHT)  # Positioned on the right
+
+# Add OS label (For the people that dont know what OS they are using, which they should know but you know..theres people out there)
+os_label = tk.Label(root, text="Current OS:", font=("Arial", 10, "bold"))
+os_label.pack(pady=3, side=tk.RIGHT)  # Positioned on the right side of the screen
+
+# Add creator label
+creator_label = tk.Label(root, text="Application created by Xanadu Systems (ShiroNet)", fg="green")
+creator_label.pack(side=tk.TOP, anchor='w')  # Positioned on the top of the menu screen, aligned to the left
+
+# Add software version label
+version_label = tk.Label(root, text="Version: " + SOFTWARE_VERSION, font=("Arial", 8, "bold"))
+version_label.pack(side=tk.TOP, anchor='w')  # Positioned below the creator label, aligned to the left
 
 # Run the Tkinter event loop
 root.mainloop()

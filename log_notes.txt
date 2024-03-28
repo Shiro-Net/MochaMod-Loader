@@ -18,6 +18,14 @@ Version 1.3 (March 24th, 2024)
 * Added viewList to show the current mod folder directrory for easier use (If you were lazy to click Open Mod Folder)
 * Added refresh button to refresh the system memory for the application to show the contents of the mod folder if you have added anything new (or some shit)
 
-Version 1.4 (March 27th, 2024)
+Version 1.4 (March 26th, 2024)
 * Added a new button on menu strip (shows log notes Hello)
 * Added a marquee on the top (looks nice)
+
+Version 1.5 (March 27th, 2024)
+* Added the function for auto detection of OS (Windwos, MacOS, and Linux)
+* Added the function for auto path detection for Minecraft mod folder based on the operating system
+* Added menu button to go to my github
+* Added the SOFTWARE_VERSION global variable (noice)
+* Added label on the bottom right to show the current OS (incase the person is stupid)
+* Added label on the bottom left to show the current version of the software
