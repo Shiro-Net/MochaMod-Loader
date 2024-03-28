@@ -29,3 +29,4 @@ Version 1.5 (March 27th, 2024)
 * Added the SOFTWARE_VERSION global variable (noice)
 * Added label on the bottom right to show the current OS (incase the person is stupid)
 * Added label on the bottom left to show the current version of the software
+* Fixed that program wouldnt start, the program will now start regardless of mods folder existing. 
