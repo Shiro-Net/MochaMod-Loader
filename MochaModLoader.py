@@ -1,28 +1,22 @@
 # MochaMod Loader 
-# This application is meant to help install mod folders to the users existing mod folder in their Minecraft directory (assuming they didnt move the folder from default location)
+# This application is meant to help install mod folders to the users existing mod folder in their Minecraft directory (assuming they didn't move the folder from default location)
 
-import os # fucking OS import
+import os
 import shutil
-import tkinter as tk # cause fuck python cmd's this makes gui's
-# GUI libraries
-from tkinter import filedialog
-from tkinter import messagebox
-from tkinter import scrolledtext
-# 
+import tkinter as tk
+from tkinter import filedialog, messagebox, scrolledtext
 import getpass
-import platform # OS detection library :D
+import platform
 import webbrowser
 
 # MochaMod Loader Version number global variable
-SOFTWARE_VERSION = "1.4"
+SOFTWARE_VERSION = "1.5"
 
 def replace_mod_folder():
     source_folder = filedialog.askdirectory(title="Select Your Mod Folder")
     username = getpass.getuser()
 
-    # This checks for all systems that i have added, since not everyone uses windows we wanted to accept all operating systems because someone is going to bitch about it one day
-    # might as well make it happen now am i
-
+    # This checks for all systems that I have added
     if platform.system() == "Windows":
         target_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
     elif platform.system() == "Darwin":  # macOS
@@ -139,14 +133,21 @@ def show_log_notes():
 # Update the list that contains the mods
 def update_contents_list(folder):
     contents_list.delete(0, tk.END)
-    for item in os.listdir(folder):
-        contents_list.insert(tk.END, item)
+    if not os.path.exists(folder):
+        messagebox.showerror("Error", f"Mod folder '{folder}' not found.")
+        return
+    
+    try:
+        for item in os.listdir(folder):
+            contents_list.insert(tk.END, item)
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
 
 # Create the main window
 root = tk.Tk()
 root.title("MochaMod Loader")
 root.resizable(False, False)  # Prevent resizing
-    
+
 # Function to determine OS color
 def get_os_color():
     system = platform.system()
@@ -157,20 +158,28 @@ def get_os_color():
     elif system == "Linux":
         return "orange"
     else:
-        return "black"  # Default color    
+        return "black"  # Default color 
     
-
 # Create a menu strip
 menu_strip = tk.Menu(root)
 root.config(menu=menu_strip)
 
-# Create a submenu for "Help"
+# Create a "Help" submenu
 help_menu = tk.Menu(menu_strip, tearoff=0)
 help_menu.add_command(label="About", command=show_about)
 help_menu.add_command(label="How to Use the Software", command=show_usage)
 menu_strip.add_cascade(label="Help", menu=help_menu)
-menu_strip.add_cascade(label="ShrioNet's Log Notes", command=show_log_notes)
-menu_strip.add_cascade(label="ShiroNet's Github", command=open_github)
+
+# Create a "ShrioNet's Log Notes" submenu
+log_notes_menu = tk.Menu(menu_strip, tearoff=0)
+log_notes_menu.add_command(label="View Log Notes", command=show_log_notes)
+menu_strip.add_cascade(label="ShrioNet's Log Notes", menu=log_notes_menu)
+
+# Create a "ShiroNet's Github" submenu
+github_menu = tk.Menu(menu_strip, tearoff=0)
+github_menu.add_command(label="Open Github", command=open_github)
+menu_strip.add_cascade(label="ShiroNet's Github", menu=github_menu)
+
 
 # Create a marquee label
 marquee_text = "Please select the correct folder that contain your mods before uploading!                                        "  # Extra spaces added
@@ -241,4 +250,3 @@ version_label.pack(side=tk.TOP, anchor='w')  # Positioned below the creator labe
 
 # Run the Tkinter event loop
 root.mainloop()
-
