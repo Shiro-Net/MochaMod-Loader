@@ -4,19 +4,19 @@
 import os
 import shutil
 import tkinter as tk
-from tkinter import filedialog, messagebox, scrolledtext
+from tkinter import filedialog, messagebox, scrolledtext,PhotoImage
 import getpass
 import platform
 import webbrowser
 
 # MochaMod Loader Version number global variable
-SOFTWARE_VERSION = "1.5"
+SOFTWARE_VERSION = "1.5.2"
 
 def replace_mod_folder():
     source_folder = filedialog.askdirectory(title="Select Your Mod Folder")
     username = getpass.getuser()
 
-    # This checks for all systems that I have added
+    # This checks for all systems that I have added (because theres going to be someone who is using a macOS machine and cannot find their mod folder..)
     if platform.system() == "Windows":
         target_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
     elif platform.system() == "Darwin":  # macOS
@@ -63,6 +63,7 @@ def replace_mod_folder():
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {str(e)}")
 
+# Opens the mod folder that the system found or that the user has preselected.
 def open_mod_folder():
     username = getpass.getuser()
 
@@ -78,6 +79,36 @@ def open_mod_folder():
 
     os.startfile(mod_folder)
 
+# Function to clear the mod folder that was selected (we made sure to let the user know because this shit cannot be reversed..)    
+def clear_mod_folder():
+    username = getpass.getuser()
+
+    if platform.system() == "Windows":
+        mod_folder = f"C:/Users/{username}/AppData/Roaming/.minecraft/mods"
+    elif platform.system() == "Darwin":  # macOS
+        mod_folder = f"/Users/{username}/Library/Application Support/minecraft/mods"
+    elif platform.system() == "Linux":
+        mod_folder = f"/home/{username}/.minecraft/mods"
+    else:
+        messagebox.showerror("Unsupported OS", "This operating system is not supported.")
+        return
+
+    confirmed = messagebox.askokcancel("Clear Mod Folder", "Are you sure you want to clear the mod folder? This action cannot be undone.")
+
+    if confirmed:
+        try:
+            # Delete the contents of the mod folder
+            for item in os.listdir(mod_folder):
+                item_path = os.path.join(mod_folder, item)
+                if os.path.isfile(item_path):
+                    os.unlink(item_path)
+                else:
+                    shutil.rmtree(item_path)
+            messagebox.showinfo("Success", "Mod folder cleared successfully.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {str(e)}")    
+    
+# Function to refresh the users folder under the list box we added in the GUI
 def refresh_contents_list():
     username = getpass.getuser()
 
@@ -93,8 +124,48 @@ def refresh_contents_list():
 
     update_contents_list(mod_folder)
 
+# Function for the about window
 def show_about():
-    messagebox.showinfo("About", f"MochaMod Loader\n\nVersion {SOFTWARE_VERSION}\n\nCreated by Xanadu Systems (ShiroNet)")
+    about_text = f"MochaMod Loader\n\nVersion {SOFTWARE_VERSION}\n\nCreated by Xanadu Systems (Developer: ShiroNet)\n\nAllows mod folders to be replaced easily with a GUI"
+                
+    # Load the logo image using PhotoImage
+    logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
+    if os.path.exists(logo_path):
+            logo_image = tk.PhotoImage(file=logo_path)
+    else:
+            logo_image = None
+
+    # Toplevel window for the about message box
+    about_window = tk.Toplevel(root.master)
+    about_window.title("About Software")
+    # Set the size of the about window
+    about_window.geometry("400x300") 
+    about_window.resizable(False,False)
+
+    # Make the about window set frozen
+    about_window.grab_set()
+
+    # Display the logo image if available
+    if logo_image:
+        logo_label = tk.Label(about_window, image=logo_image)
+        logo_label.image = logo_image  # Keep a reference to prevent garbage collection
+        logo_label.pack(pady=5)
+
+    # Display the about text
+    about_label = tk.Label(about_window, text=about_text)
+    about_label.pack(pady=5)
+
+    # Add a button to close the about window
+    close_button = tk.Button(about_window, text="Close", command=lambda: close_about(about_window))
+    close_button.pack(pady=5)
+
+def close_about(about_window):
+    about_window.grab_release()  # Release the grab so main window can be clicked
+    about_window.destroy()
+
+# OLD CODE 
+#def show_about():
+#messagebox.showinfo("About", f"MochaMod Loader\n\nVersion {SOFTWARE_VERSION}\n\nCreated by Xanadu Systems (ShiroNet)")
 
 def show_usage():
     messagebox.showinfo("How to Use", "To use the software, follow these steps:\n\n1. Click the 'Replace Mod Folder' button to select your mod folder.\n2. Click the 'Open Mod Folder' button to open the current mod folder.\n3. Click the refresh button to verify that your mod folder has changed\n Enjoy using MochaMod Loader!")
@@ -105,13 +176,21 @@ def open_github():
     
 def show_log_notes():
     try:
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the full path to the log file
+        log_file_path = os.path.join(script_dir, "log_notes.txt")
+
         # Open the .txt file containing the log notes
-        with open("log_notes.txt", "r", encoding="utf-8") as file:
+        with open(log_file_path, "r", encoding="utf-8") as file:
             log_notes_content = file.read()
             
         # Create a new window to display the log notes
         log_notes_window = tk.Toplevel(root)
         log_notes_window.title("ShrioNet's Log Notes")
+        # Set the size of the about window
+        log_notes_window.geometry("850x500") 
+        log_notes_window.resizable(False,False)
 
         # Create a Text widget to display the log notes
         log_text = tk.Text(log_notes_window, wrap=tk.WORD)
@@ -125,10 +204,18 @@ def show_log_notes():
         scrollbar = tk.Scrollbar(log_notes_window, command=log_text.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         log_text.config(yscrollcommand=scrollbar.set)
+        
+        # Make the about window modal
+        log_notes_window.grab_set()  
 
-    except FileNotFoundError:
-        messagebox.showerror("Error", "Log notes file not found.")
-        #If those happens im not sure what the fuck happened to that log_notes ¯\_(ツ)_/¯ that shit gone for real, you can probably download it from the repo or some shit.
+    except Exception as e:
+        print("Exception occurred:", e)  # Print out the exception
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+        #If this happens im not sure what the fuck happened to that log_notes ¯\_(ツ)_/¯ that shit gone for real, you can probably download it from the repo or some shit.
+
+def close_log_note(log_notes_window):
+    log_notes_window.grab_release()  # Release the grab so main window can be clicked
+    log_notes_window.destroy()
 
 # Update the list that contains the mods
 def update_contents_list(folder):
@@ -147,6 +234,14 @@ def update_contents_list(folder):
 root = tk.Tk()
 root.title("MochaMod Loader")
 root.resizable(False, False)  # Prevent resizing
+
+    # Set the icon
+icon_path = os.path.join(os.path.dirname(__file__), "MochaModIcon.ico")
+if os.path.exists(icon_path):
+    root.iconbitmap(default=icon_path)
+else:
+    print("Error: Icon file not found.")
+
 
 # Function to determine OS color
 def get_os_color():
@@ -216,6 +311,10 @@ current_mod_folder_label.pack(pady=5)
 # Create and pack a title label
 mod_folder_path_label = tk.Label(root, text="Current Mods in Folder", font=("Arial", 10))
 mod_folder_path_label.pack(pady=2)
+
+# Add a button to clear the mod folder
+clear_button = tk.Button(root, text="Clear Mod Folder", command=clear_mod_folder)
+clear_button.pack(pady=5)
 
 # Create a refresh button to update the contents of the mod folder list
 refresh_button = tk.Button(root, text="Refresh Mod List", command=refresh_contents_list)
